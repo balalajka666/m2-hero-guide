@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>桃鉄2 歴史ヒーロー検索ツール</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .search-input:focus {
+            border-color: #3498db;
+        }
+        .search-button {
+            padding: 12px 25px;
+            font-size: 16px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .search-button:hover {
+            background-color: #2980b9;
+        }
+        .message {
+            text-align: center;
+            font-size: 18px;
+            color: #e74c3c;
+            margin-top: 20px;
+        }
+        .hero-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .hero-table th, .hero-table td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        .hero-table th {
+            background-color: #f8f9fa;
+            color: #666;
+            font-weight: bold;
+            width: 120px;
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .hero-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .hero-reading {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-left: 8px;
+            font-weight: normal;
+        }
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .badge-east {
+            background-color: #2ecc71;
+        }
+        .badge-west {
+            background-color: #e67e22;
+        }
+        .list-item {
+            margin-bottom: 6px;
+        }
+        .list-item:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>桃鉄2 歴史ヒーロー検索</h1>
+    
+    <form id="searchForm" class="search-form">
+        <input type="text" id="searchInput" class="search-input" placeholder="ひらがなで名前を入力してください（例：いしかわ）" required>
+        <button type="submit" class="search-button">検索</button>
+    </form>
+
+    <div id="infoSection"></div>
+</div>
+
+<script>
+    let heroData = [];
+
+    // JSONファイルの読み込み
+    fetch('hero.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('JSONの読み込みに失敗しました');
+            }
+            return response.json();
+        })
+        .then(data => {
+            heroData = data;
+        })
+        .catch(error => {
+            console.error('エラー:', error);
+            document.getElementById('infoSection').innerHTML = '<p class="message">データの読み込みに失敗しました。</p>';
+        });
+
+    // 検索処理
+    document.getElementById('searchForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const input = document.getElementById('searchInput').value.trim();
+        const infoSection = document.getElementById('infoSection');
+        
+        // 表示のクリア
+        infoSection.innerHTML = '';
+
+        if (!input) return;
+
+        // 部分一致でフィルタリング（ひらがな reading）
+        const results = heroData.filter(hero => hero.reading.includes(input));
+
+        if (results.length === 0) {
+            infoSection.innerHTML = '<p class="message">歴史人物が見つかりません</p>';
+            return;
+        }
+
+        // 結果の出力
+        results.forEach(hero => {
+            const table = document.createElement('table');
+            table.className = 'hero-table';
+
+            // 地方に応じたバッジのクラス判定
+            const badgeClass = hero.region === '東日本' ? 'badge-east' : 'badge-west';
+
+            // 条件と効果の配列を改行区切りのHTMLに変換
+            const conditionHtml = hero.condition.map(c => `<div class="list-item">・${c}</div>`).join('');
+            const effectsHtml = hero.effects.map(e => `<div class="list-item">・${e}</div>`).join('');
+
+            table.innerHTML = `
+                <tr>
+                    <th>名前</th>
+                    <td>
+                        <div class="header-container">
+                            <div>
+                                <span class="hero-name">${hero.name}</span>
+                                <span class="hero-reading">(${hero.reading})</span>
+                            </div>
+                            <span class="badge ${badgeClass}">${hero.region}</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>出現場所</th>
+                    <td>${hero.location.name}</td>
+                </tr>
+                <tr>
+                    <th>独占金額</th>
+                    <td>${hero.monopoly_price}</td>
+                </tr>
+                <tr>
+                    <th>条件</th>
+                    <td>${conditionHtml}</td>
+                </tr>
+                <tr>
+                    <th>効果</th>
+                    <td>${effectsHtml}</td>
+                </tr>
+            `;
+            infoSection.appendChild(table);
+        });
+    });
+</script>
+
+</body>
+</html>
