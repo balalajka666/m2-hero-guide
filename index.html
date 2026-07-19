@@ -6,44 +6,46 @@
     <title>桃鉄2 歴史ヒーロー検索ツール</title>
     <style>
         body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
             background-color: #f4f6f9;
             color: #333;
             margin: 0;
-            padding: 20px;
+            padding: 15px; /* スマホ用に余白を少し狭く */
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
             background: #fff;
-            padding: 30px;
+            padding: 20px; /* スマホ用に少し狭く */
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
         h1 {
             text-align: center;
             color: #2c3e50;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            font-size: 24px; /* スマホでも適切なサイズ */
         }
         .search-form {
             display: flex;
             gap: 10px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
         .search-input {
             flex: 1;
             padding: 12px 15px;
-            font-size: 16px;
+            font-size: 16px; /* スマホでズームされないように16pxを維持 */
             border: 2px solid #ddd;
             border-radius: 4px;
             outline: none;
             transition: border-color 0.3s;
+            min-width: 0; /* フレックスボックス内の縮小対策 */
         }
         .search-input:focus {
             border-color: #3498db;
         }
         .search-button {
-            padding: 12px 25px;
+            padding: 12px 20px;
             font-size: 16px;
             background-color: #3498db;
             color: #fff;
@@ -51,24 +53,26 @@
             border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.3s;
+            white-space: nowrap;
         }
         .search-button:hover {
             background-color: #2980b9;
         }
         .message {
             text-align: center;
-            font-size: 18px;
+            font-size: 16px;
             color: #e74c3c;
             margin-top: 20px;
         }
         .hero-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             background: #fff;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border-radius: 4px;
+            border-radius: 8px;
             overflow: hidden;
+            border: 1px solid #e0e0e0;
         }
         .hero-table th, .hero-table td {
             border: 1px solid #e0e0e0;
@@ -86,26 +90,33 @@
             justify-content: space-between;
             align-items: center;
             width: 100%;
+            gap: 10px;
+        }
+        .name-box {
+            display: flex;
+            flex-direction: column; /* スマホで行が詰まらないよう縦並びベース */
         }
         .hero-name {
             font-size: 18px;
             font-weight: bold;
             color: #2c3e50;
+            line-height: 1.2;
         }
         .hero-reading {
-            font-size: 14px;
+            font-size: 13px;
             color: #7f8c8d;
-            margin-left: 8px;
             font-weight: normal;
+            margin-top: 2px;
         }
         .badge {
             display: inline-block;
-            padding: 6px 12px;
-            font-size: 12px;
+            padding: 4px 10px;
+            font-size: 11px;
             font-weight: bold;
             color: #fff;
             border-radius: 20px;
             text-align: center;
+            white-space: nowrap;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .badge-east {
@@ -116,9 +127,52 @@
         }
         .list-item {
             margin-bottom: 6px;
+            line-height: 1.4;
+            font-size: 15px;
         }
         .list-item:last-child {
             margin-bottom: 0;
+        }
+
+        /* 📱 スマートフォン用のスタイル（画面幅600px以下） */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+            /* テーブルの項目と内容を縦並びにする */
+            .hero-table tr {
+                display: flex;
+                flex-direction: column;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            .hero-table tr:last-child {
+                border-bottom: none;
+            }
+            .hero-table th, .hero-table td {
+                border: none;
+                width: auto;
+                padding: 10px 12px;
+            }
+            .hero-table th {
+                background-color: #f8f9fa;
+                padding-bottom: 4px;
+                font-size: 13px;
+                color: #888;
+            }
+            .hero-table td {
+                padding-top: 2px;
+                padding-bottom: 12px;
+            }
+            .list-item {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -128,7 +182,7 @@
     <h1>桃鉄2 歴史ヒーロー検索</h1>
     
     <form id="searchForm" class="search-form">
-        <input type="text" id="searchInput" class="search-input" placeholder="ひらがなで名前を入力してください（例：いしかわ）" required>
+        <input type="text" id="searchInput" class="search-input" placeholder="ひらがなで入力（例：いしかわ）" required>
         <button type="submit" class="search-button">検索</button>
     </form>
 
@@ -191,7 +245,7 @@
                     <th>名前</th>
                     <td>
                         <div class="header-container">
-                            <div>
+                            <div class="name-box">
                                 <span class="hero-name">${hero.name}</span>
                                 <span class="hero-reading">(${hero.reading})</span>
                             </div>
